@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AutoReview</string>
+    <string name="accessibility_service_description">AutoReview accessibility service that inspects and fills evaluation forms automatically based on your preset preferences.</string>
+    <string name="overlay_notification_channel">AutoReview Overlay</string>
+    <string name="overlay_notification_text">Floating overlay active \u2014 tap to auto-fill</string>
+    <string name="notification_channel_name">Automation Status</string>
+</resources>
