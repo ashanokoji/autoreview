@@ -251,13 +251,18 @@ class AutoFillAccessibilityService : AccessibilityService() {
                     }
                 } else if (q.type == QuestionType.YES_NO) {
                     val yesNo = q.interactiveNodes
+                    val choice = preset.yesNo ?: (config.defaultBinaryChoice == "Yes")
                     if (yesNo.size == 2) {
-                        val choice = preset.yesNo ?: (config.defaultBinaryChoice == "Yes")
                         val target = if (choice) yesNo[0] else yesNo[1]
                         AppLogger.d(TAG, "Clicking $choice for question: ${q.questionText}")
                         val success = NodeFinder.performClickOnNodeOrParent(target, this@AutoFillAccessibilityService, TAG)
                         AppLogger.d(TAG, "Yes/No click success: $success")
                         delayScaled(100..200, config.automationSpeed)
+                    } else if (yesNo.isEmpty()) {
+                        AppLogger.d(TAG, "Clicking $choice via coordinate offset for hidden question: ${q.questionText}")
+                        val success = NodeFinder.performGestureClickByOffset(q.cardRoot, this@AutoFillAccessibilityService, choice)
+                        AppLogger.d(TAG, "Yes/No hidden gesture click success: $success")
+                        delayScaled(200..400, config.automationSpeed)
                     }
                 }
                 
@@ -319,6 +324,18 @@ class AutoFillAccessibilityService : AccessibilityService() {
             logHistory(true, "Completed review successfully")
         } else {
             AppLogger.e(TAG, "Submit button not found or not enabled")
+            AppLogger.d(TAG, "--- FINAL DUMPING UI TREE ---")
+            fun dumpNode(n: AccessibilityNodeInfo, indent: String = "") {
+                AppLogger.d(TAG, "$indent[${n.className}] text='${n.text}' desc='${n.contentDescription}' isClickable=${n.isClickable}")
+                for (i in 0 until n.childCount) {
+                    n.getChild(i)?.let { 
+                        dumpNode(it, "$indent  ")
+                        it.recycle()
+                    }
+                }
+            }
+            dumpNode(root)
+            AppLogger.d(TAG, "--- END FINAL UI TREE ---")
             updateState(OverlayService.AutomationState.ERROR)
             logHistory(false, "Submit button not found")
         }

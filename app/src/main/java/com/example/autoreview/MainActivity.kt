@@ -68,6 +68,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.google.android.gms.ads.MobileAds.initialize(this) {}
         com.example.autoreview.util.AppLogger.init(applicationContext)
         handleIntent(intent)
         setContent {
@@ -220,6 +221,9 @@ private fun MainScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(title = { Text("AutoReview") })
+        },
+        bottomBar = {
+            com.example.autoreview.ui.BannerAdView(adUnitId = "ca-app-pub-4466199320300059/4112361740")
         }
     ) { padding ->
         Column(
@@ -254,6 +258,8 @@ private fun MainScreen(
                     }
                 }
             }
+
+            com.example.autoreview.ui.NativeAdViewComposable(adUnitId = "ca-app-pub-4466199320300059/2205595151")
 
             // Disclosure
             Card(modifier = Modifier.fillMaxWidth()) {
@@ -369,6 +375,8 @@ private fun MainScreen(
                     }
                 }
             }
+
+            com.example.autoreview.ui.NativeAdViewComposable(adUnitId = "ca-app-pub-4466199320300059/3327105135")
 
             // Run History
             Card(modifier = Modifier.fillMaxWidth()) {

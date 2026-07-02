@@ -100,22 +100,15 @@ fun PermissionsScreen(
     val allGranted = permissions.all { it.isGranted() }
 
     Scaffold(
-        topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
-            TopAppBar(
-                title = { Text("Permissions") },
-                navigationIcon = {
-                    IconButton(onClick = onAllGranted) {
-                        Text("<", style = MaterialTheme.typography.titleLarge)
-                    }
-                }
-            )
+        bottomBar = {
+            BannerAdView(adUnitId = "ca-app-pub-4466199320300059/4112361740")
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .systemBarsPadding()
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -168,6 +161,9 @@ fun PermissionsScreen(
                         }
                     }
                 }
+            }
+            if (perm.title == "Display Over Other Apps") {
+                NativeAdViewComposable(adUnitId = "ca-app-pub-4466199320300059/3327105135")
             }
         }
 

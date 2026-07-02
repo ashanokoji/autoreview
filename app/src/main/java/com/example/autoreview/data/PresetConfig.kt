@@ -1,7 +1,6 @@
 package com.example.autoreview.data
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 enum class UnrecognizedPolicy {
