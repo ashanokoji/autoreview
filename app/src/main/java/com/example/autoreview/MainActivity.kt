@@ -385,8 +385,11 @@ private fun MainScreen(
                     if (config.runHistory.isEmpty()) {
                         Text("No runs yet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
+                        var historyExpanded by remember { mutableStateOf(false) }
                         val dateFormat = remember { SimpleDateFormat("MMM dd, HH:mm:ss", Locale.getDefault()) }
-                        config.runHistory.forEach { entry ->
+                        val visibleEntries = if (historyExpanded) config.runHistory else config.runHistory.take(3)
+                        
+                        visibleEntries.forEach { entry ->
                             val color = if (entry.success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -404,6 +407,18 @@ private fun MainScreen(
                                 )
                             }
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        }
+                        
+                        if (config.runHistory.size > 3) {
+                            TextButton(
+                                onClick = { historyExpanded = !historyExpanded },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    if (historyExpanded) "Show less" else "Show all (${config.runHistory.size})",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
                         }
                     }
                 }
