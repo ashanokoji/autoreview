@@ -136,9 +136,19 @@ class AutoFillAccessibilityService : AccessibilityService() {
             writeReviewBtn.recycle()
             delayScaled(1000L, config.automationSpeed)
             root = waitForRoot()
+        } else {
+            // No Write Review button — either already submitted or no review available
+            AppLogger.w(TAG, "No Write Review button found")
+            updateState(OverlayService.AutomationState.ERROR)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@AutoFillAccessibilityService, "No review to submit or already submitted", Toast.LENGTH_SHORT).show()
+            }
+            logHistory(false, "No Write Review button found")
+            return@withContext
         }
 
-        // Simple text-based tracking
+        // Simple text-based tracking — strip number prefix so "1\nStarts class..." 
+        // and "Starts class..." are treated as the same question
         val answered = mutableSetOf<String>()
         var scrollAttempts = 0
 
@@ -146,13 +156,27 @@ class AutoFillAccessibilityService : AccessibilityService() {
         while (isActive && !shouldStop.get()) {
             root.recycle()
             root = waitForRoot()
+            
+            // Check for submit button — if visible, we're done with questions
+            val earlySubmit = NodeFinder.findEnabledSubmit(root)
+            if (earlySubmit != null && answered.isNotEmpty()) {
+                AppLogger.d(TAG, "Submit button visible! Clicking immediately...")
+                NodeFinder.performClickOnNodeOrParent(earlySubmit, this@AutoFillAccessibilityService, TAG)
+                earlySubmit.recycle()
+                updateState(OverlayService.AutomationState.DONE)
+                AppLogger.d(TAG, "Automation finished (${answered.size} questions)")
+                logHistory(true, "Completed review (${answered.size} questions)")
+                return@withContext
+            }
+            earlySubmit?.recycle()
+            
             val discovered = NodeFinder.discoverQuestionCards(root)
-            val unhandled = discovered.filter { it.questionText !in answered }
+            val unhandled = discovered.filter { stripNumberPrefix(it.questionText) !in answered }
             
             AppLogger.d(TAG, "Discovered ${discovered.size} questions, ${unhandled.size} unhandled, scrollAttempts=$scrollAttempts")
 
             // Clean up already-answered
-            discovered.filter { it.questionText in answered }.forEach {
+            discovered.filter { stripNumberPrefix(it.questionText) in answered }.forEach {
                 it.interactiveNodes.forEach { n -> n.recycle() }
                 it.cardRoot.recycle()
             }
@@ -254,76 +278,38 @@ class AutoFillAccessibilityService : AccessibilityService() {
                 }
                 
                 q.interactiveNodes.forEach { it.recycle() }
-                answered.add(q.questionText)
+                answered.add(stripNumberPrefix(q.questionText))
             }
         }
         
         if (shouldStop.get()) return@withContext
 
-        // === SUBMIT PHASE ===
-        AppLogger.d(TAG, "Looking for Submit button...")
-        var submitBtn: AccessibilityNodeInfo? = null
-        
-        for (i in 1..20) {
+        // === SUBMIT FALLBACK: only reached if submit wasn't found during main loop ===
+        AppLogger.d(TAG, "Submit not found during main loop, scrolling to find it...")
+        for (i in 1..5) {
             root.recycle()
             root = waitForRoot()
-            submitBtn = NodeFinder.findEnabledSubmit(root)
             
+            val submitBtn = NodeFinder.findEnabledSubmit(root)
             if (submitBtn != null) {
-                val container = NodeFinder.findScrollableContainer(root)
-                val containerRect = android.graphics.Rect().apply { container?.getBoundsInScreen(this) }
-                container?.recycle()
-                
-                if (NodeFinder.isNodeVisible(submitBtn, if (containerRect.isEmpty) null else containerRect, screenHeight, screenWidth)) {
-                    break
-                } else {
-                    AppLogger.d(TAG, "Submit button not visible, scrolling...")
-                    val scrollContainer = NodeFinder.findScrollableContainer(root)
-                    var scrolled = NodeFinder.performScrollForward(scrollContainer)
-                    if (!scrolled) {
-                        scrolled = NodeFinder.performGestureScroll(this@AutoFillAccessibilityService, screenHeight, screenWidth, forward = true)
-                    }
-                    scrollContainer?.recycle()
-                    
-                    if (!scrolled) {
-                        AppLogger.d(TAG, "Cannot scroll further, using submit button anyway.")
-                        break
-                    }
-                    
-                    submitBtn.recycle()
-                    submitBtn = null
-                }
-            } else {
-                val scrollContainer = NodeFinder.findScrollableContainer(root)
-                var scrolled = NodeFinder.performScrollForward(scrollContainer)
-                if (!scrolled) {
-                    scrolled = NodeFinder.performGestureScroll(this@AutoFillAccessibilityService, screenHeight, screenWidth, forward = true)
-                }
-                scrollContainer?.recycle()
-                
-                if (!scrolled && i > 5) {
-                    AppLogger.w(TAG, "Cannot scroll further and no submit button found")
-                    break
-                }
+                AppLogger.d(TAG, "Found Submit button, clicking...")
+                NodeFinder.performClickOnNodeOrParent(submitBtn, this@AutoFillAccessibilityService, TAG)
+                submitBtn.recycle()
+                updateState(OverlayService.AutomationState.DONE)
+                AppLogger.d(TAG, "Automation finished (${answered.size} questions)")
+                logHistory(true, "Completed review (${answered.size} questions)")
+                return@withContext
             }
             
-            delayScaled(300L, config.automationSpeed)
+            val scrollContainer = NodeFinder.findScrollableContainer(root)
+            NodeFinder.performScrollForward(scrollContainer)
+            scrollContainer?.recycle()
+            delayScaled(150L, config.automationSpeed)
         }
         
-        if (submitBtn != null) {
-            AppLogger.d(TAG, "Found Submit button, clicking...")
-            delayScaled(200..400, config.automationSpeed)
-            val success = NodeFinder.performClickOnNodeOrParent(submitBtn, this@AutoFillAccessibilityService, TAG)
-            AppLogger.d(TAG, "Submit click success: $success")
-            submitBtn.recycle()
-            updateState(OverlayService.AutomationState.DONE)
-            AppLogger.d(TAG, "Automation finished successfully (${answered.size} questions)")
-            logHistory(true, "Completed review (${answered.size} questions)")
-        } else {
-            AppLogger.e(TAG, "Submit button not found or not enabled")
-            updateState(OverlayService.AutomationState.ERROR)
-            logHistory(false, "Submit button not found (${answered.size} answered)")
-        }
+        AppLogger.e(TAG, "Submit button not found")
+        updateState(OverlayService.AutomationState.ERROR)
+        logHistory(false, "Submit not found (${answered.size} answered)")
     }
 
     private suspend fun waitForRoot(): AccessibilityNodeInfo {
@@ -343,6 +329,11 @@ class AutoFillAccessibilityService : AccessibilityService() {
 
     private suspend fun delayScaled(range: IntRange, speed: Float) {
         delay((range.random() * speed).toLong().milliseconds)
+    }
+
+    /** Strips leading "1\n", "12\n" etc. so both variants of the same question match */
+    private fun stripNumberPrefix(text: String): String {
+        return text.trim().replace(Regex("^\\d+\\s*[\\n\\r]+\\s*"), "").trim()
     }
 
 

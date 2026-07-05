@@ -71,8 +71,11 @@ object NodeFinder {
         val text = node.text?.toString() ?: ""
         val desc = node.contentDescription?.toString() ?: ""
         if (node.isEnabled && (text.contains("Submit", ignoreCase = true) || desc.contains("Submit", ignoreCase = true))) {
+            // Exclude non-button elements
             if (desc.contains("Answer all questions", ignoreCase = true)) return null
             if (text.contains("Answer all questions", ignoreCase = true)) return null
+            if (desc.contains("submitted", ignoreCase = true)) return null
+            if (text.contains("submitted", ignoreCase = true)) return null
             return node
         }
         for (i in 0 until node.childCount) {
@@ -228,7 +231,7 @@ object NodeFinder {
 
         collect(node)
         if (yesNode != null && noNode != null) {
-            return Pair(yesNode!!, noNode!!)
+            return Pair(yesNode, noNode)
         }
         
         yesNode?.recycle()
