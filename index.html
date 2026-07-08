@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoReview | Smarter Reviews for Android</title>
+    <meta name="description" content="Download AutoReview, the most advanced Android app to automate and streamline your review processes. Get the latest APK now.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #1a2333 100%);
+            --primary: #3ddc84; /* Android Green */
+            --primary-glow: rgba(61, 220, 132, 0.4);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(30, 41, 59, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Abstract Tech Background Elements */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -150px;
+            right: -150px;
+            width: 500px;
+            height: 500px;
+            background: var(--primary);
+            filter: blur(150px);
+            opacity: 0.15;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -200px;
+            left: -200px;
+            width: 600px;
+            height: 600px;
+            background: #2563eb;
+            filter: blur(180px);
+            opacity: 0.15;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Navbar */
+        header {
+            padding: 2rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, var(--primary), #2563eb);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo-text span {
+            color: var(--primary);
+        }
+
+        nav ul {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--text-main);
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 6rem 0 4rem;
+            min-height: 70vh;
+            justify-content: center;
+        }
+
+        .badge {
+            background: rgba(61, 220, 132, 0.1);
+            border: 1px solid rgba(61, 220, 132, 0.2);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 5vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            line-height: 1.6;
+        }
+
+        /* Download Button */
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--primary);
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.125rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px -10px var(--primary);
+        }
+
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px -10px var(--primary);
+            background: #4ade80;
+        }
+
+        .download-btn:hover::before {
+            left: 100%;
+        }
+
+        .download-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        
+        .version-info {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Tech Mockup / Graphic */
+        .mockup-container {
+            margin-top: 4rem;
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .code-snippet {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+            text-align: left;
+            width: 100%;
+            padding: 2rem;
+            opacity: 0.8;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .mockup-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: var(--primary);
+            filter: blur(100px);
+            opacity: 0.2;
+        }
+
+        /* Features */
+        .features {
+            padding: 6rem 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 2rem;
+            border-radius: 20px;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(61, 220, 132, 0.5);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(61, 220, 132, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .feature-desc {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--card-border);
+            padding: 3rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                display: none; /* Simple mobile hide */
+            }
+            .hero {
+                padding: 4rem 0 2rem;
+            }
+            .mockup-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <a href="#" class="logo-container">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM11 19.93C7.05 19.43 4 16.05 4 12C4 7.95 7.05 4.57 11 4.07V19.93ZM13 4.07C14.03 4.2 15 4.52 15.87 5L13 7.87V4.07ZM13 9.28L16.2 6.08C17.13 6.8 17.89 7.72 18.42 8.76L13 14.18V9.28ZM13 15.6L19.38 9.22C19.78 10.1 20 11.03 20 12C20 13.14 19.72 14.21 19.22 15.17L13 21.39V15.6Z"/>
+                    </svg>
+                </div>
+                <div class="logo-text">Auto<span>Review</span></div>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#how-it-works">How it works</a></li>
+                    <li><a href="https://github.com/nawfumi/autoreview">GitHub</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.5 4.25L15.93 5.82L18.11 8H13.5V10H18.11L15.93 12.18L17.5 13.75L22.25 9L17.5 4.25ZM10.5 14H5.89L8.07 11.82L6.5 10.25L1.75 15L6.5 19.75L8.07 18.18L5.89 16H10.5V14Z"/>
+                </svg>
+                v1.0.0 Now Available
+            </div>
+            
+            <h1>Smart, Automated<br>Reviews for Android</h1>
+            <p class="hero-subtitle">
+                Supercharge your workflow with the most advanced mobile review engine. Built natively for Android, designed for developers and power users.
+            </p>
+
+            <a href="https://github.com/nawfumi/autoreview/releases/download/v1.0.0/app-release.apk" class="download-btn">
+                <svg class="download-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.59 13.41C17.21 13.03 16.58 13.03 16.2 13.41L13 16.61V5C13 4.45 12.55 4 12 4C11.45 4 11 4.45 11 5V16.61L7.8 13.41C7.42 13.03 6.79 13.03 6.41 13.41C6.02 13.79 6.02 14.42 6.41 14.81L11.3 19.7C11.69 20.09 12.32 20.09 12.71 19.7L17.6 14.81C17.98 14.42 17.98 13.79 17.59 13.41Z"/>
+                </svg>
+                Download APK
+            </a>
+            <div class="version-info">Requires Android 8.0+ • 15 MB</div>
+
+            <!-- Tech Graphic -->
+            <div class="mockup-container">
+                <div class="mockup-glow"></div>
+                <div class="code-snippet">
+<pre><code>// AutoReview Initialization
+class CoreEngine {
+    fun initialize(context: Context) {
+        ReviewManager.start(
+            config = Config.Builder()
+                .enableAIAnalysis(true)
+                .setMode(Mode.TURBO)
+                .build()
+        )
+        Logger.d("Engine", "Systems online.")
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features" id="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.22 1.76-.61 2.53l2.25 1.3c.75-1.12 1.21-2.43 1.32-3.83h3.04c-.13 5.37-4.49 9.73-9.86 9.86v3.04c-1.4-.11-2.71-.57-3.83-1.32l1.3-2.25c.77.39 1.63.61 2.53.61 3.53 0 6.43-2.61 6.92-6h-3.03c-.34 2.22-2.14 4.02-4.36 4.36v-3.03c-1.12-.34-2.1-.96-2.83-1.78l1.7-1.7c.43.43.94.75 1.5.95v-3.01c-.56-.2-1.07-.52-1.5-.95l-1.7 1.7c-.82-.73-1.44-1.71-1.78-2.83h3.03c.34-2.22 2.14-4.02 4.36-4.36V2.05c-5.37.13-9.73 4.49-9.86 9.86H2.05C2.18 6.54 6.54 2.18 11.91 2.05h1.09zM12 8c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4z"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Native Android Tech</h3>
+                <p class="feature-desc">Built purely with Kotlin and Jetpack Compose. Lightning fast performance and a tiny footprint, designed specifically for the Android ecosystem.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h-2v5H6v2h2v5h2v-5h2v-2z"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Seamless Automation</h3>
+                <p class="feature-desc">Define rules, set up triggers, and let AutoReview handle the heavy lifting. Advanced algorithms ensure precision and speed.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Bank-Grade Security</h3>
+                <p class="feature-desc">All processes happen locally on your device. Zero telemetry, open-source codebase, and strictly sandboxed execution.</p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2026 AutoReview Project. Open source and free forever.</p>
+        </footer>
+    </div>
+
+</body>
+</html>
