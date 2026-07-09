@@ -12,6 +12,11 @@ kotlinxSerialization = "1.7.3"
 playServicesAds = "23.1.0"
 cardview = "1.0.0"
 
+unityMediationSdk = "9.5.0"
+playServicesAppset = "16.0.0"
+playServicesAdsIdentifier = "18.1.0"
+playServicesBasement = "18.1.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -30,8 +35,11 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version = "1.1.1" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version = "2.8.6" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
-play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+unity-mediation-sdk = { group = "com.unity3d.ads-mediation", name = "mediation-sdk", version.ref = "unityMediationSdk" }
+play-services-appset = { group = "com.google.android.gms", name = "play-services-appset", version.ref = "playServicesAppset" }
+play-services-ads-identifier = { group = "com.google.android.gms", name = "play-services-ads-identifier", version.ref = "playServicesAdsIdentifier" }
+play-services-basement = { group = "com.google.android.gms", name = "play-services-basement", version.ref = "playServicesBasement" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

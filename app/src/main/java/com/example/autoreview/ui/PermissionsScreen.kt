@@ -103,7 +103,7 @@ fun PermissionsScreen(
 
     Scaffold(
         bottomBar = {
-            BannerAdView(adUnitId = "ca-app-pub-4466199320300059/4112361740")
+            BannerAdView(adUnitId = "0ddc0xxzq2u7swcx")
         }
     ) { padding ->
         Column(
@@ -166,7 +166,7 @@ fun PermissionsScreen(
                 }
             }
             if (perm.title == "Display Over Other Apps") {
-                NativeAdViewComposable(adUnitId = "ca-app-pub-4466199320300059/3327105135")
+                NativeAdViewComposable(adUnitId = "i31n81wo0yf37eeg")
             }
         }
 

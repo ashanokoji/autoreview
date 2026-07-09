@@ -4,6 +4,15 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import com.unity3d.mediation.LevelPlay
+import com.unity3d.mediation.LevelPlayInitListener
+import com.unity3d.mediation.LevelPlayInitRequest
+import com.unity3d.mediation.LevelPlayConfiguration
+import com.unity3d.mediation.LevelPlayInitError
+import com.unity3d.mediation.LevelPlayAdInfo
+import com.unity3d.mediation.LevelPlayAdError
+import com.unity3d.mediation.interstitial.LevelPlayInterstitialAd
+import com.unity3d.mediation.interstitial.LevelPlayInterstitialAdListener
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -58,7 +67,9 @@ import java.util.Locale
 
 private enum class Screen { PERMISSIONS, MAIN, PRESET_SETTINGS, UNRECOGNIZED_QUESTION, LOGS }
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), LevelPlayInterstitialAdListener {
+
+    private lateinit var mInterstitialAd: LevelPlayInterstitialAd
 
     private val viewModel: MainViewModel by lazy {
         androidx.lifecycle.ViewModelProvider(this)[MainViewModel::class.java]
@@ -68,12 +79,23 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        com.google.android.gms.ads.MobileAds.initialize(this) {}
+        LevelPlay.setMetaData("is_test_suite", "enable")
+        val initRequest = LevelPlayInitRequest.Builder("271e3e6fd").build()
+        LevelPlay.init(this, initRequest, object : LevelPlayInitListener {
+            override fun onInitFailed(error: LevelPlayInitError) {}
+            override fun onInitSuccess(configuration: LevelPlayConfiguration) {
+                LevelPlay.launchTestSuite(this@MainActivity)
+                
+                mInterstitialAd = LevelPlayInterstitialAd("2yvp2oand17mdoke")
+                mInterstitialAd.setListener(this@MainActivity)
+                mInterstitialAd.loadAd()
+            }
+        })
         com.example.autoreview.util.AppLogger.init(applicationContext)
         handleIntent(intent)
         setContent {
             AutoReviewTheme {
-                AutoReviewApp(viewModel, unrecognizedQuestionState)
+                AutoReviewApp(viewModel, unrecognizedQuestionState, ::showInterstitialAd)
             }
         }
     }
@@ -92,10 +114,29 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
     }
+
+    fun showInterstitialAd() {
+        if (::mInterstitialAd.isInitialized && mInterstitialAd.isAdReady) {
+            mInterstitialAd.showAd(this)
+        }
+    }
+
+    override fun onAdLoaded(adInfo: LevelPlayAdInfo) {}
+    override fun onAdLoadFailed(error: LevelPlayAdError) {}
+    override fun onAdInfoChanged(adInfo: LevelPlayAdInfo) {}
+    override fun onAdDisplayed(adInfo: LevelPlayAdInfo) {}
+    override fun onAdDisplayFailed(error: LevelPlayAdError, adInfo: LevelPlayAdInfo) {}
+    override fun onAdClicked(adInfo: LevelPlayAdInfo) {}
+    override fun onAdClosed(adInfo: LevelPlayAdInfo) {
+        // Load the next ad when current one is closed
+        if (::mInterstitialAd.isInitialized) {
+            mInterstitialAd.loadAd()
+        }
+    }
 }
 
 @Composable
-fun AutoReviewApp(viewModel: MainViewModel, unrecognizedQuestionState: MutableState<String?>) {
+fun AutoReviewApp(viewModel: MainViewModel, unrecognizedQuestionState: MutableState<String?>, showInterstitialAd: () -> Unit) {
     val context = LocalContext.current
     val config by viewModel.presetConfig.collectAsState()
     val overlayActive by viewModel.overlayActive.collectAsState()
@@ -173,7 +214,12 @@ fun AutoReviewApp(viewModel: MainViewModel, unrecognizedQuestionState: MutableSt
                     disclosureAccepted = accepted
                     prefs.edit { putBoolean("disclosure_accepted", accepted) }
                 },
-                onToggleOverlay = { viewModel.toggleOverlay(context) },
+                onToggleOverlay = { 
+                    viewModel.toggleOverlay(context)
+                    if (!overlayActive) {
+                        showInterstitialAd()
+                    }
+                },
                 onOpenOverlaySettings = {
                     context.startActivity(
                         Intent(
@@ -220,7 +266,7 @@ private fun MainScreen(
             TopAppBar(title = { Text("AutoReview") })
         },
         bottomBar = {
-            com.example.autoreview.ui.BannerAdView(adUnitId = "ca-app-pub-4466199320300059/4112361740")
+            com.example.autoreview.ui.BannerAdView(adUnitId = "0ddc0xxzq2u7swcx")
         }
     ) { padding ->
         Column(
@@ -256,7 +302,7 @@ private fun MainScreen(
                 }
             }
 
-            com.example.autoreview.ui.NativeAdViewComposable(adUnitId = "ca-app-pub-4466199320300059/2205595151")
+            com.example.autoreview.ui.NativeAdViewComposable(adUnitId = "i31n81wo0yf37eeg")
 
             // Disclosure
             Card(modifier = Modifier.fillMaxWidth()) {
@@ -388,7 +434,7 @@ private fun MainScreen(
                 }
             }
 
-            com.example.autoreview.ui.NativeAdViewComposable(adUnitId = "ca-app-pub-4466199320300059/3327105135")
+            com.example.autoreview.ui.NativeAdViewComposable(adUnitId = "i31n81wo0yf37eeg")
 
             // Run History
             Card(modifier = Modifier.fillMaxWidth()) {

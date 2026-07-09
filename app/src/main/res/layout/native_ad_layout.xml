@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.gms.ads.nativead.NativeAdView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.ironsource.mediationsdk.ads.nativead.NativeAdLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -63,7 +63,7 @@
                 android:textSize="12sp"
                 android:textColor="?android:attr/textColorSecondary" />
 
-            <com.google.android.gms.ads.nativead.MediaView
+            <com.ironsource.mediationsdk.ads.nativead.LevelPlayMediaView
                 android:id="@+id/ad_media"
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
@@ -84,4 +84,4 @@
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>
-</com.google.android.gms.ads.nativead.NativeAdView>
+</com.ironsource.mediationsdk.ads.nativead.NativeAdLayout>

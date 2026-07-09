@@ -99,6 +99,9 @@ fun LogsScreen(
                     }
                 }
             )
+        },
+        bottomBar = {
+            BannerAdView(adUnitId = "0ddc0xxzq2u7swcx")
         }
     ) { padding ->
         SelectionContainer {

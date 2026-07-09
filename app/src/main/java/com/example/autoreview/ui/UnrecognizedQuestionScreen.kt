@@ -21,12 +21,18 @@ fun UnrecognizedQuestionScreen(
     var yesNo by remember { mutableStateOf<Boolean?>(null) }
     var isBinary by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Scaffold(
+        bottomBar = {
+            BannerAdView(adUnitId = "0ddc0xxzq2u7swcx")
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         Text(
             "Unrecognized Question",
             style = MaterialTheme.typography.headlineSmall,
@@ -123,4 +129,5 @@ fun UnrecognizedQuestionScreen(
             }
         }
     }
+}
 }
