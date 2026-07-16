@@ -29,7 +29,7 @@ data class PresetConfig(
     val defaultBinaryChoice: String = "Yes",
     val unrecognizedPolicy: UnrecognizedPolicy = UnrecognizedPolicy.USE_DEFAULTS,
     val runHistory: List<RunHistoryEntry> = emptyList(),
-    val automationSpeed: Float = 1.0f
+    val automationSpeed: Float = 2.0f
 ) {
     companion object {
         private val json = Json {

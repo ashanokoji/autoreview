@@ -156,12 +156,12 @@ class AutoFillAccessibilityService : AccessibilityService() {
         val answeredNums = mutableSetOf<Int>()
         var maxNumSeen = 0
 
-        // === PASS 1: Fast native scan ===
+        // === PASS 1: Robust gesture scan (50%) ===
         val pass1 = forwardScan(
             answered = answered,
             answeredNums = answeredNums,
             maxNumSeen = { n -> if (n > maxNumSeen) maxNumSeen = n },
-            useNativeScroll = true,
+            useNativeScroll = false,
             config = config,
             screenHeight = screenHeight,
             screenWidth = screenWidth
@@ -202,18 +202,13 @@ class AutoFillAccessibilityService : AccessibilityService() {
             }
             val sc = NodeFinder.findScrollableContainer(root)
             val containerRect = android.graphics.Rect().apply { sc?.getBoundsInScreen(this) }
-            val scrolled = NodeFinder.performScrollForward(sc)
-            var gestureUsed = false
-            if (!scrolled) {
-                NodeFinder.performGestureScroll(
-                    this@AutoFillAccessibilityService, screenHeight, screenWidth,
-                    forward = true, fraction = 0.5f,
-                    containerRect = if (containerRect.isEmpty) null else containerRect
-                )
-                gestureUsed = true
-            }
+            NodeFinder.performGestureScroll(
+                this@AutoFillAccessibilityService, screenHeight, screenWidth,
+                forward = true, fraction = 0.5f,
+                containerRect = if (containerRect.isEmpty) null else containerRect
+            )
             sc?.recycle()
-            delayScaled(if (gestureUsed) 400L else 150L, config.automationSpeed)
+            delayScaled(400L, config.automationSpeed)
         }
 
         AppLogger.e(TAG, "Submit button not found")
@@ -360,14 +355,19 @@ class AutoFillAccessibilityService : AccessibilityService() {
 
             val discovered = NodeFinder.discoverQuestionCards(root)
             val unhandled = discovered.filter { stripNumberPrefix(it.questionText) !in answered }
+
+            val sig = discovered.map { stripNumberPrefix(it.questionText) }.sorted().joinToString("|")
+            if (sig != lastSig) { lastSig = sig; stagnant = 0 } else stagnant++
+
+            AppLogger.d(TAG, "Discovered ${discovered.size} questions, ${unhandled.size} unhandled, scroll=$scrollAttempts stagnant=$stagnant")
+
             val container = NodeFinder.findScrollableContainer(root)
+            val containerRect = android.graphics.Rect().apply { container?.getBoundsInScreen(this) }
 
-            val sig = unhandled.joinToString { it.questionText.take(15) }
-            if (sig == lastSig) stagnant++ else { stagnant = 0; lastSig = sig }
-
-            val safeUnhandled = unhandled.filter { 
-                val containerRect = android.graphics.Rect().apply { container?.getBoundsInScreen(this) }
-                NodeFinder.isNodeVisible(it.cardRoot, if (containerRect.isEmpty) null else containerRect, screenHeight, screenWidth)
+            val safeUnhandled = unhandled.filter { q ->
+                q.interactiveNodes.all { node ->
+                    NodeFinder.isNodeVisible(node, if (containerRect.isEmpty) null else containerRect, screenHeight, screenWidth)
+                }
             }
 
             // Release nodes of already-answered cards.
@@ -376,22 +376,39 @@ class AutoFillAccessibilityService : AccessibilityService() {
                 it.cardRoot.recycle()
             }
 
-            if (unhandled.isEmpty()) {
-                if (submitVisible) {
-                    container?.recycle(); root.recycle()
-                    return ScanResult(submitVisible = true, endNoGaps = true, needsUser = false, stopped = false)
+            if (safeUnhandled.isEmpty()) {
+                if (unhandled.isEmpty()) {
+                    if (submitVisible) {
+                        container?.recycle(); root.recycle()
+                        return ScanResult(submitVisible = true, endNoGaps = true, needsUser = false, stopped = false)
+                    }
+                    if (stagnant >= 4) {
+                        container?.recycle(); root.recycle()
+                        return ScanResult(submitVisible = false, endNoGaps = true, needsUser = false, stopped = false)
+                    }
+                } else if (stagnant >= 6) {
+                    // Cards exist but never become fully on-screen; answer them anyway via fallback tap.
+                    AppLogger.d(TAG, "Cannot bring remaining questions fully on-screen; answering via fallback.")
+                    container?.recycle()
+                    val r = processQuestions(unhandled, answered, answeredNums, maxNumSeen, config)
+                    root.recycle()
+                    if (r != AnswerOutcome.OK) {
+                        return ScanResult(submitVisible = false, endNoGaps = false, needsUser = r == AnswerOutcome.NEEDS_USER, stopped = r == AnswerOutcome.STOP)
+                    }
+                    continue
                 }
-                if (stagnant >= 4) {
-                    container?.recycle(); root.recycle()
-                    return ScanResult(submitVisible = false, endNoGaps = true, needsUser = false, stopped = false)
-                }
-                
+
                 var gestureUsed = false
                 val containerRect = android.graphics.Rect().apply { container?.getBoundsInScreen(this) }
                 if (useNativeScroll) {
                     val sc = NodeFinder.performScrollForward(container)
                     if (!sc) {
-                        AppLogger.w(TAG, "Native scroll returned false. Either at bottom or service needs restart.")
+                        NodeFinder.performGestureScroll(
+                            this@AutoFillAccessibilityService, screenHeight, screenWidth,
+                            forward = true, fraction = 0.5f,
+                            containerRect = if (containerRect.isEmpty) null else containerRect
+                        )
+                        gestureUsed = true
                     }
                 } else {
                     NodeFinder.performGestureScroll(
@@ -404,51 +421,21 @@ class AutoFillAccessibilityService : AccessibilityService() {
                 container?.recycle()
                 scrollAttempts++
                 root.recycle()
-                delayScaled(if (gestureUsed) 400..500 else 50..100, config.automationSpeed)
+                delayScaled(if (gestureUsed) 400..500 else 100..250, config.automationSpeed)
                 continue
-            }
-
-            if (safeUnhandled.isEmpty() && !useNativeScroll) {
-                if (stagnant >= 6) {
-                    AppLogger.d(TAG, "Cannot bring remaining questions fully on-screen; answering via fallback.")
-                    container?.recycle()
-                    val r = processQuestions(unhandled, answered, answeredNums, maxNumSeen, config)
-                    root.recycle()
-                    if (r != AnswerOutcome.OK) return ScanResult(submitVisible = false, endNoGaps = false, needsUser = r == AnswerOutcome.NEEDS_USER, stopped = r == AnswerOutcome.STOP)
-                    continue
-                }
-                
-                val containerRect = android.graphics.Rect().apply { container?.getBoundsInScreen(this) }
-                NodeFinder.performGestureScroll(
-                    this@AutoFillAccessibilityService, screenHeight, screenWidth,
-                    forward = true, fraction = 0.5f,
-                    containerRect = if (containerRect.isEmpty) null else containerRect
-                )
+            } else {
                 container?.recycle()
-                scrollAttempts++
-                root.recycle()
-                delayScaled(400..500, config.automationSpeed)
-                continue
             }
-
-            container?.recycle()
             scrollAttempts = 0
 
-            val toProcess = if (useNativeScroll) unhandled else safeUnhandled.ifEmpty { unhandled }
+            val toProcess = safeUnhandled.ifEmpty { unhandled }
             val r = processQuestions(toProcess, answered, answeredNums, maxNumSeen, config)
-            
-            if (useNativeScroll && r == AnswerOutcome.OK) {
-                val sc2 = NodeFinder.findScrollableContainer(root)
-                NodeFinder.performScrollForward(sc2)
-                sc2?.recycle()
-                delayScaled(50..100, config.automationSpeed)
-            }
-            
             root.recycle()
             if (r != AnswerOutcome.OK) {
                 return ScanResult(submitVisible = false, endNoGaps = false, needsUser = r == AnswerOutcome.NEEDS_USER, stopped = r == AnswerOutcome.STOP)
             }
         }
+
         return ScanResult(submitVisible = false, endNoGaps = true, needsUser = false, stopped = true)
     }
 
@@ -506,7 +493,7 @@ class AutoFillAccessibilityService : AccessibilityService() {
                 if (stars.size == 5 && starVal in 1..5) {
                     AppLogger.d(TAG, "Clicking star $starVal for: ${q.questionText.take(50)}")
                     NodeFinder.performClickOnNodeOrParent(stars[starVal - 1], this@AutoFillAccessibilityService, TAG)
-                    delayScaled(50..100, config.automationSpeed)
+                    delayScaled(100..200, config.automationSpeed)
                 }
             } else if (q.type == QuestionType.YES_NO) {
                 val yesNo = q.interactiveNodes
@@ -515,7 +502,7 @@ class AutoFillAccessibilityService : AccessibilityService() {
                     val target = if (choice) yesNo[0] else yesNo[1]
                     AppLogger.d(TAG, "Clicking ${if (choice) "Yes" else "No"} for: ${q.questionText.take(50)}")
                     NodeFinder.performClickOnNodeOrParent(target, this@AutoFillAccessibilityService, TAG)
-                    delayScaled(50..100, config.automationSpeed)
+                    delayScaled(100..200, config.automationSpeed)
                 }
             }
 

@@ -136,11 +136,11 @@ fun PresetSettingsScreen(
                     }
                     Text(
                         text = when {
-                            sliderValue < 0.6f -> "Very Fast (May cause app to skip inputs)"
-                            sliderValue < 1.1f -> "Fast"
-                            sliderValue < 1.6f -> "Normal"
-                            sliderValue < 2.1f -> "Slow"
-                            else -> "Very Slow"
+                            sliderValue < 0.6f -> "Extremely Fast (May cause app to skip inputs)"
+                            sliderValue < 1.1f -> "Very Fast"
+                            sliderValue < 1.6f -> "Fast"
+                            sliderValue < 2.1f -> "Normal"
+                            else -> "Slow"
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
@@ -161,8 +161,8 @@ fun PresetSettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Text("Extremely Fast", style = MaterialTheme.typography.labelSmall)
                         Text("Fast", style = MaterialTheme.typography.labelSmall)
-                        Text("Normal", style = MaterialTheme.typography.labelSmall)
                         Text("Slow", style = MaterialTheme.typography.labelSmall)
                     }
                 }
