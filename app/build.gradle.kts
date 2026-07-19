@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.serialization.json)
     implementation("com.github.aptabase:aptabase-kotlin:0.0.8")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     implementation(libs.play.services.appset)
     implementation(libs.play.services.basement)
     implementation(libs.androidx.cardview)
